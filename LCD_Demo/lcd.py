@@ -1,18 +1,6 @@
-#EG810M
-import request
-from machine import LCD 
-from machine import Pin
-from machine import ExtInt
-import time
-import math
-import ujson
-import uos
-# 根据LCD商家给出的相应的初始化示例来填写
-# 第一行：2, 0, 120,		2表示sleep命令,中间恒为0,120表示sleep的毫秒数。收到此行数据,LCD将sleep 120ms
-# 第二行：0, 0, 0x11,		0表示写入寄存器地址命令,中间数字表示后续需要写入的DATA长度，0表示没有要写入的数据,0x11是寄存器地址
-# 第三行：0, 1, 0x36,		0表示写入寄存器地址命令,中间数字表示后续需要写入的DATA长度，1表示要写入一字节数据,0x36是寄存器地址
-# 第四行：1, 1, 0x00,		1表示写入数据命令,中间数字表示写入的数据长度,0x00是数据
-# 后面按照前四行的格式将初始化示例填入即可
+from machine import LCD
+import lvgl as lv
+import time 
 init_data = (
             0, 0, 0x11,
             2, 0, 120,
@@ -123,22 +111,38 @@ lcd.lcd_init(init_list, 240,320,26000,1,4,0,invalid_list,display_on_list,display
 
 
 
+lv.init()
+
+LCD_SIZE_W = 240
+LCD_SIZE_H = 320
+
+disp_buf1 = lv.disp_draw_buf_t()
+buf1_1 = bytearray(LCD_SIZE_W * LCD_SIZE_H * 2)
+disp_buf1.init(buf1_1, None, len(buf1_1))
+disp_drv = lv.disp_drv_t()
+disp_drv.init()
+disp_drv.draw_buf = disp_buf1
+disp_drv.flush_cb = lcd.lcd_write
+disp_drv.hor_res = LCD_SIZE_W
+disp_drv.ver_res = LCD_SIZE_H
+disp_drv.register()
+
+lv.tick_inc(5)
+lv.task_handler()
 
 
+screen = lv.obj()
 
-# def generate_data(i):
-#         r = int((math.sin(0.02 * i + 0) * 0.5 + 0.5) * 31)  # 红色分量 (5 bits)
-#         g = int((math.sin(0.02 * i + 2) * 0.5 + 0.5) * 63)  # 绿色分量 (6 bits)
-#         b = int((math.sin(0.02 * i + 4) * 0.5 + 0.5) * 31)  # 蓝色分量 (5 bits)
-#         return ((r << 11) | (g << 5) | b)  # RGB565 格式
 
-# i = 0
-
-# while True:   
-#     color = generate_data(i)
-#     lcd.lcd_clear(color) 
-#     print(color)
-#     utime.sleep_ms(10)    
-#     i += 1
-    
-
+# create a image object
+img1 = lv.img(screen)
+img1.set_pos(0, 0)
+count = 1
+while True:
+    img1.set_src("U:/images" + str(count) + ".jpg")
+    print("U:/images" + str(count)  + ".jpg")
+    lv.scr_load(screen)
+    count+=1
+    if count==7:
+        count=1
+    time.sleep(2)
